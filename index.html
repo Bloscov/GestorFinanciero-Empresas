@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sin Nombre — ERP Financiero Inteligente</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- ================= PANTALLA DE LOGIN / REGISTRO ================= -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-header">
+        <span class="logo-mark">SN</span>
+        <div>
+          <h1>Sin Nombre ERP</h1>
+          <p>Banca y control financiero para PyMEs</p>
+        </div>
+      </div>
+
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" data-auth-tab="login">Iniciar Sesión</button>
+        <button type="button" class="auth-tab" data-auth-tab="register">Crear Cuenta</button>
+      </div>
+
+      <!-- Formulario Login -->
+      <form id="login-form" class="auth-form active">
+        <label>
+          Correo electrónico
+          <input id="login-email" type="email" class="form-input" placeholder="admin@tecnocloud.mx" required>
+        </label>
+        <label>
+          Contraseña
+          <input id="login-password" type="password" class="form-input" placeholder="••••••••" required>
+        </label>
+        <p id="login-error" class="auth-error"></p>
+        <button type="submit" class="btn-primary btn-full">Entrar al ERP</button>
+
+        <div class="auth-demo-hint">
+          <strong>Cuentas demo disponibles (pass: 123456):</strong>
+          <div class="demo-chips">
+            <button type="button" class="demo-chip" data-demo-email="admin@tecnocloud.mx">TecnoCloud S.A.</button>
+            <button type="button" class="demo-chip" data-demo-email="finanzas@nortesys.mx">NorteSys Corp.</button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Formulario Registro -->
+      <form id="register-form" class="auth-form">
+        <label>
+          Nombre de la empresa
+          <input id="reg-company" type="text" class="form-input" placeholder="Ej. Logística Norte S.A." required>
+        </label>
+        <label>
+          Correo electrónico
+          <input id="reg-email" type="email" class="form-input" placeholder="contacto@empresa.mx" required>
+        </label>
+        <label>
+          Contraseña
+          <input id="reg-password" type="password" class="form-input" placeholder="Mínimo 4 caracteres" minlength="4" required>
+        </label>
+        <label>
+          Saldo inicial bancario ($ MXN)
+          <input id="reg-balance" type="number" class="form-input mono" min="0" step="1000" value="250000" required>
+        </label>
+        <p id="register-error" class="auth-error"></p>
+        <button type="submit" class="btn-primary btn-full">Crear cuenta y acceder</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= APLICACIÓN PRINCIPAL ================= -->
+  <div id="app-shell" class="app-layout hidden">
+    <!-- SIDEBAR DE NAVEGACIÓN -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-logo">
+          <span class="logo-mark">SN</span>
+          <div class="brand-info">
+            <span class="brand-name">Sin Nombre</span>
+            <span class="brand-badge">ERP PYME</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selector / Cambiador de Cuentas -->
+      <div class="company-switcher-wrap">
+        <button type="button" id="btn-company-switcher" class="company-selector">
+          <div id="sidebar-company-avatar" class="company-avatar">TC</div>
+          <div class="company-details">
+            <span id="sidebar-company-name" class="company-name">TecnoCloud S.A.</span>
+            <span id="sidebar-company-email" class="company-plan">admin@tecnocloud.mx</span>
+          </div>
+          <span class="switcher-caret">▾</span>
+        </button>
+
+        <div id="company-dropdown" class="company-dropdown">
+          <div class="dropdown-title">Cambiar de cuenta</div>
+          <div id="company-accounts-list"></div>
+          <div class="dropdown-divider"></div>
+          <button type="button" id="btn-add-login-account" class="dropdown-action">+ Crear nueva cuenta</button>
+          <button type="button" id="btn-logout" class="dropdown-action danger">Cerrar sesión</button>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <span class="nav-section-title">ANÁLISIS Y CONTROL</span>
+        <a href="#dashboard" class="nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a href="#simulador" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+          Simulador
+        </a>
+
+        <span class="nav-section-title">OPERACIONES</span>
+        <a href="#cuentas" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          Cuentas y Bancos
+        </a>
+        <a href="#transacciones" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          Transacciones
+        </a>
+        <a href="#obligaciones" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Obligaciones
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="demo-status">
+          <span class="status-dot"></span>
+          Sesión activa
+        </div>
+        <button type="button" id="btn-reset-demo" class="btn-reset-demo">Reiniciar datos de esta empresa</button>
+      </div>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+      <header class="topbar">
+        <div class="page-title">
+          <h1>Sin Nombre — Control Financiero</h1>
+          <p><span id="topbar-company-name">TecnoCloud S.A.</span> • Estado consolidado y análisis en tiempo real</p>
+        </div>
+
+        <div class="topbar-actions">
+          <div class="period-filter" role="group" aria-label="Filtro de periodo">
+            <button type="button" class="filter-btn" data-period="Día">Día</button>
+            <button type="button" class="filter-btn" data-period="Semana">Semana</button>
+            <button type="button" class="filter-btn active" data-period="Mes">Mes</button>
+            <button type="button" class="filter-btn" data-period="Trimestre">Trimestre</button>
+            <button type="button" class="filter-btn" data-period="Año">Año</button>
+          </div>
+          <button type="button" id="btn-open-modal" class="btn-primary">+ Nuevo Movimiento</button>
+        </div>
+      </header>
+
+      <!-- ================= VISTA 1: DASHBOARD ================= -->
+      <div id="view-dashboard" class="app-view active">
+        <section class="alert-banner">
+          <div class="alert-icon">⚡</div>
+          <div class="alert-text">
+            <strong>Proyección de liquidez saludable:</strong> Tienes cartera activa por cobrar que respalda tus compromisos operativos próximos.
+          </div>
+          <a href="#simulador" class="alert-link">Simular escenario →</a>
+        </section>
+
+        <section class="kpi-grid">
+          <article class="kpi-card featured">
+            <div class="kpi-header">
+              <span class="kpi-label">Balance Total Disponible</span>
+              <span class="kpi-trend positive">+12.4%</span>
+            </div>
+            <div id="kpi-balance-value" class="kpi-value mono">$0.00</div>
+            <div id="kpi-accounts-count" class="kpi-subtext">Distribuido en 3 cuentas bancarias</div>
+          </article>
+
+          <article class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Ingresos del Periodo</span>
+              <span class="kpi-trend positive">+8.2%</span>
+            </div>
+            <div id="kpi-income-value" class="kpi-value mono">$0.00</div>
+            <div class="kpi-subtext">Ingresos conciliados en el sistema</div>
+          </article>
+
+          <article class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Gastos Operativos</span>
+              <span class="kpi-trend negative">+3.1%</span>
+            </div>
+            <div id="kpi-expense-value" class="kpi-value mono">$0.00</div>
+            <div id="kpi-margin-text" class="kpi-subtext">Margen operativo neto: 0%</div>
+          </article>
+
+          <article class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Flujo de Efectivo Neto</span>
+              <span id="kpi-flow-badge" class="kpi-trend positive">+$0.00</span>
+            </div>
+            <div id="kpi-flow-value" class="kpi-value mono positive-text">+$0.00</div>
+            <div id="kpi-runway-text" class="kpi-subtext">Runway estimado: 0 meses</div>
+          </article>
+        </section>
+
+        <section class="dashboard-grid">
+          <article class="card chart-card">
+            <div class="card-header">
+              <div>
+                <h2>Ingresos vs. Gastos</h2>
+                <p class="card-subtitle">Comportamiento semestral (Cifras en miles MXN)</p>
+              </div>
+              <div class="chart-legend">
+                <span class="legend-item"><i class="dot income"></i>Ingresos</span>
+                <span class="legend-item"><i class="dot expense"></i>Gastos</span>
+              </div>
+            </div>
+
+            <div class="bar-chart">
+              <div class="bar-group"><div class="bars"><div class="bar income" style="height: 62%;"></div><div class="bar expense" style="height: 45%;"></div></div><span class="bar-label">Jun</span></div>
+              <div class="bar-group"><div class="bars"><div class="bar income" style="height: 70%;"></div><div class="bar expense" style="height: 48%;"></div></div><span class="bar-label">Jul</span></div>
+              <div class="bar-group"><div class="bars"><div class="bar income" style="height: 66%;"></div><div class="bar expense" style="height: 52%;"></div></div><span class="bar-label">Ago</span></div>
+              <div class="bar-group"><div class="bars"><div class="bar income" style="height: 82%;"></div><div class="bar expense" style="height: 50%;"></div></div><span class="bar-label">Sep</span></div>
+              <div class="bar-group"><div class="bars"><div class="bar income" style="height: 78%;"></div><div class="bar expense" style="height: 47%;"></div></div><span class="bar-label">Oct</span></div>
+              <div class="bar-group active"><div class="bars"><div class="bar income" style="height: 92%;"></div><div class="bar expense" style="height: 54%;"></div></div><span class="bar-label">Nov</span></div>
+            </div>
+          </article>
+
+          <article class="card obligations-card">
+            <div class="card-header">
+              <div>
+                <h2>Compromisos Financieros</h2>
+                <p class="card-subtitle">Cartera activa y vencimientos</p>
+              </div>
+            </div>
+
+            <div class="obligation-block">
+              <div class="obligation-top">
+                <span class="ob-title">Cuentas por Cobrar</span>
+                <span id="ob-receivables-amount" class="ob-amount mono positive-text">$0.00</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill income" style="width: 74%;"></div>
+              </div>
+              <div class="obligation-meta">
+                <span>Cartera por cobrar activa</span>
+                <a href="#obligaciones" class="inline-link" data-ob-tab="receivables">Gestionar →</a>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="obligation-block">
+              <div class="obligation-top">
+                <span class="ob-title">Cuentas por Pagar</span>
+                <span id="ob-payables-amount" class="ob-amount mono warning-text">$0.00</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill warning" style="width: 38%;"></div>
+              </div>
+              <div class="obligation-meta">
+                <span>Obligaciones con proveedores</span>
+                <a href="#obligaciones" class="inline-link" data-ob-tab="payables">Gestionar →</a>
+              </div>
+            </div>
+
+            <div class="flow-preview-box">
+              <div class="flow-preview-info">
+                <strong>Distribución del Gasto</strong>
+                <span id="flow-summary-line">Nómina (0%) • Software (0%) • Operación (0%)</span>
+              </div>
+              <a href="#obligaciones" class="btn-secondary">Ver Obligaciones</a>
+            </div>
+          </article>
+        </section>
+
+        <section class="card transactions-card">
+          <div class="card-header">
+            <div>
+              <h2>Movimientos Recientes</h2>
+              <p class="card-subtitle">Últimas operaciones conciliadas automáticamente</p>
+            </div>
+            <a href="#transacciones" class="btn-ghost">Ver historial completo</a>
+          </div>
+
+          <div class="table-responsive">
+            <table class="fintech-table">
+              <thead>
+                <tr>
+                  <th>Concepto / Entidad</th>
+                  <th>Categoría</th>
+                  <th>Cuenta</th>
+                  <th>Fecha</th>
+                  <th class="text-right">Monto</th>
+                </tr>
+              </thead>
+              <tbody id="dashboard-tx-body"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- ================= VISTA 2: SIMULADOR FINANCIERO ================= -->
+      <div id="view-simulador" class="app-view">
+        <div id="sim-verdict-banner" class="sim-verdict alert-ok"></div>
+
+        <section class="sim-grid">
+          <article class="card sim-controls-card">
+            <div class="card-header">
+              <div>
+                <h2>Variables del Escenario</h2>
+                <p class="card-subtitle">Simulación aislada: no modifica registros reales</p>
+              </div>
+              <button type="button" id="btn-reset-sim" class="btn-secondary">Restablecer</button>
+            </div>
+
+            <div class="sim-control">
+              <div class="sim-label-row">
+                <label for="sim-expense-pct">Variación en gastos operativos</label>
+                <strong id="sim-expense-pct-val" class="mono">0%</strong>
+              </div>
+              <input id="sim-expense-pct" data-sim-key="expenseChangePct" type="range" min="-40" max="60" step="5" value="0">
+            </div>
+
+            <div class="sim-control">
+              <div class="sim-label-row">
+                <label for="sim-sales-pct">Variación en volumen de ventas</label>
+                <strong id="sim-sales-pct-val" class="mono">0%</strong>
+              </div>
+              <input id="sim-sales-pct" data-sim-key="salesChangePct" type="range" min="-50" max="60" step="5" value="0">
+            </div>
+
+            <div class="sim-control">
+              <div class="sim-label-row">
+                <label for="sim-price-pct">Ajuste de precio promedio</label>
+                <strong id="sim-price-pct-val" class="mono">0%</strong>
+              </div>
+              <input id="sim-price-pct" data-sim-key="priceIncreasePct" type="range" min="-20" max="40" step="5" value="0">
+            </div>
+
+            <div class="sim-control">
+              <label for="sim-extra-payroll">Contratación / Nómina adicional ($ MXN)</label>
+              <input id="sim-extra-payroll" data-sim-key="extraPayroll" class="form-input mono" type="number" min="0" step="5000" value="0">
+            </div>
+
+            <div class="sim-control">
+              <label for="sim-new-debt">Adquisición de crédito o deuda ($ MXN)</label>
+              <input id="sim-new-debt" data-sim-key="newDebt" class="form-input mono" type="number" min="0" step="10000" value="0">
+            </div>
+          </article>
+
+          <article class="card sim-results-card">
+            <div class="card-header">
+              <div>
+                <h2>Impacto Proyectado</h2>
+                <p class="card-subtitle">Comparativa contra estado base actual</p>
+              </div>
+            </div>
+
+            <div class="sim-kpis">
+              <div class="sim-box">
+                <span>Balance Actual</span>
+                <strong id="sim-real-balance" class="mono">$0.00</strong>
+              </div>
+              <div class="sim-box highlight">
+                <span>Balance Proyectado</span>
+                <strong id="sim-proj-balance" class="mono">$0.00</strong>
+              </div>
+              <div class="sim-box">
+                <span>Diferencia Neta</span>
+                <strong id="sim-delta-balance" class="mono positive-text">+$0.00</strong>
+              </div>
+            </div>
+
+            <div class="sim-bars-compare">
+              <div class="sim-bar-row">
+                <div class="sim-bar-meta">
+                  <span>Escenario Actual</span>
+                  <span class="mono">Base</span>
+                </div>
+                <div class="progress-track">
+                  <div id="sim-bar-real" class="progress-fill income" style="width: 80%;"></div>
+                </div>
+              </div>
+              <div class="sim-bar-row">
+                <div class="sim-bar-meta">
+                  <span>Escenario Simulado</span>
+                  <span class="mono">Proyección</span>
+                </div>
+                <div class="progress-track">
+                  <div id="sim-bar-proj" class="progress-fill primary" style="width: 80%;"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="sim-breakdown">
+              <div><span>Ingresos proyectados:</span><strong id="sim-proj-income" class="mono">$0.00</strong></div>
+              <div><span>Gastos proyectados:</span><strong id="sim-proj-expense" class="mono">$0.00</strong></div>
+              <div><span>Flujo neto simulado:</span><strong id="sim-proj-flow" class="mono">$0.00</strong></div>
+            </div>
+          </article>
+        </section>
+      </div>
+
+      <!-- ================= VISTA 3: CUENTAS Y BANCOS ================= -->
+      <div id="view-cuentas" class="app-view">
+        <section class="card" style="margin-bottom: 20px;">
+          <div class="card-header">
+            <div>
+              <h2>Cuentas Bancarias y Liquidez</h2>
+              <p class="card-subtitle">Saldos consolidados por instrumento financiero</p>
+            </div>
+            <div class="header-right-actions">
+              <div class="mono" style="font-size: 20px; font-weight: 700;" id="accounts-total-balance">$0.00</div>
+              <button type="button" id="btn-open-account-modal" class="btn-primary">+ Agregar Cuenta</button>
+            </div>
+          </div>
+          <div id="accounts-grid" class="kpi-grid" style="margin-bottom: 0;"></div>
+        </section>
+      </div>
+
+      <!-- ================= VISTA 4: TRANSACCIONES ================= -->
+      <div id="view-transacciones" class="app-view">
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2>Historial de Transacciones</h2>
+              <p class="card-subtitle">Filtra por tipo o busca por concepto, categoría o cuenta</p>
+            </div>
+            <div class="tx-filters">
+              <select id="tx-filter-type" class="form-select">
+                <option value="all">Todos los movimientos</option>
+                <option value="income">Solo ingresos</option>
+                <option value="expense">Solo gastos</option>
+              </select>
+              <input id="tx-search-input" type="text" class="form-input" placeholder="Buscar concepto o cuenta...">
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="fintech-table">
+              <thead>
+                <tr>
+                  <th>Concepto / Entidad</th>
+                  <th>Categoría</th>
+                  <th>Cuenta</th>
+                  <th>Fecha</th>
+                  <th class="text-right">Monto</th>
+                </tr>
+              </thead>
+              <tbody id="all-tx-body"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- ================= VISTA 5: MÓDULO GENERAL DE OBLIGACIONES (COBRAR / PAGAR) ================= -->
+      <div id="view-obligaciones" class="app-view">
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2>Módulo de Obligaciones</h2>
+              <p class="card-subtitle">Administra tus cuentas por cobrar y cuentas por pagar desde un solo lugar</p>
+            </div>
+            <button type="button" id="btn-open-ob-modal" class="btn-primary">+ Nueva Obligación</button>
+          </div>
+
+          <div class="module-tabs">
+            <button type="button" class="module-tab active" data-ob-panel="receivables">
+              Cuentas por Cobrar <span id="tab-receivables-total" class="mono positive-text">$0.00</span>
+            </button>
+            <button type="button" class="module-tab" data-ob-panel="payables">
+              Cuentas por Pagar <span id="tab-payables-total" class="mono warning-text">$0.00</span>
+            </button>
+          </div>
+
+          <!-- Panel Cobrar -->
+          <div id="ob-panel-receivables" class="ob-panel active">
+            <div class="table-responsive">
+              <table class="fintech-table">
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Concepto / Factura</th>
+                    <th>Vencimiento</th>
+                    <th>Estado</th>
+                    <th class="text-right">Monto</th>
+                    <th class="text-right">Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="receivables-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Panel Pagar -->
+          <div id="ob-panel-payables" class="ob-panel">
+            <div class="table-responsive">
+              <table class="fintech-table">
+                <thead>
+                  <tr>
+                    <th>Proveedor</th>
+                    <th>Concepto</th>
+                    <th>Fecha límite</th>
+                    <th>Estado</th>
+                    <th class="text-right">Monto</th>
+                    <th class="text-right">Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="payables-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL: NUEVO MOVIMIENTO -->
+  <div id="tx-modal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-card">
+      <div class="card-header">
+        <div>
+          <h2>Registrar Nuevo Movimiento</h2>
+          <p class="card-subtitle">Actualiza saldos y métricas al instante</p>
+        </div>
+        <button type="button" class="modal-close" data-close-modal="tx-modal">✕</button>
+      </div>
+
+      <form id="new-tx-form" class="modal-form">
+        <label>
+          Concepto o entidad
+          <input id="new-tx-title" type="text" class="form-input" placeholder="Ej. Venta mensual cliente Delta" required>
+        </label>
+
+        <div class="form-row-2">
+          <label>
+            Tipo
+            <select id="new-tx-type" class="form-select">
+              <option value="income">Ingreso (+)</option>
+              <option value="expense">Gasto (-)</option>
+            </select>
+          </label>
+
+          <label>
+            Categoría
+            <select id="new-tx-category" class="form-select">
+              <option value="Ventas B2B">Ventas B2B</option>
+              <option value="Consultoría">Consultoría</option>
+              <option value="Nómina">Nómina</option>
+              <option value="Software">Software</option>
+              <option value="Operación">Operación</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="form-row-2">
+          <label>
+            Cuenta
+            <select id="new-tx-account" class="form-select"></select>
+          </label>
+
+          <label>
+            Monto ($ MXN)
+            <input id="new-tx-amount" type="number" min="1" step="0.01" class="form-input mono" placeholder="25000" required>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="submit" class="btn-primary">Guardar movimiento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: NUEVA CUENTA BANCARIA -->
+  <div id="account-modal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-card">
+      <div class="card-header">
+        <div>
+          <h2>Agregar Cuenta Bancaria</h2>
+          <p class="card-subtitle">Añade un banco o tarjeta corporativa</p>
+        </div>
+        <button type="button" class="modal-close" data-close-modal="account-modal">✕</button>
+      </div>
+
+      <form id="new-account-form" class="modal-form">
+        <label>
+          Nombre del banco / cuenta
+          <input id="new-acc-name" type="text" class="form-input" placeholder="Ej. Banorte Empresarial" required>
+        </label>
+        <div class="form-row-2">
+          <label>
+            Tipo de cuenta
+            <input id="new-acc-type" type="text" class="form-input" placeholder="Cuenta de Cheques" required>
+          </label>
+          <label>
+            Últimos 4 dígitos
+            <input id="new-acc-number" type="text" class="form-input mono" maxlength="4" placeholder="5512" required>
+          </label>
+        </div>
+        <label>
+          Saldo inicial ($ MXN)
+          <input id="new-acc-balance" type="number" min="0" step="0.01" class="form-input mono" placeholder="50000" required>
+        </label>
+        <div class="modal-actions">
+          <button type="submit" class="btn-primary">Guardar cuenta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: NUEVA OBLIGACIÓN (COBRAR / PAGAR) -->
+  <div id="ob-modal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-card">
+      <div class="card-header">
+        <div>
+          <h2>Registrar Obligación</h2>
+          <p class="card-subtitle">Agrega una factura por cobrar o un pago a proveedor</p>
+        </div>
+        <button type="button" class="modal-close" data-close-modal="ob-modal">✕</button>
+      </div>
+
+      <form id="new-ob-form" class="modal-form">
+        <label>
+          Tipo de obligación
+          <select id="new-ob-kind" class="form-select">
+            <option value="receivable">Cuenta por Cobrar (Cliente)</option>
+            <option value="payable">Cuenta por Pagar (Proveedor)</option>
+          </select>
+        </label>
+        <label>
+          Cliente o Proveedor
+          <input id="new-ob-entity" type="text" class="form-input" placeholder="Ej. Grupo Industrial MX" required>
+        </label>
+        <label>
+          Concepto / Factura
+          <input id="new-ob-concept" type="text" class="form-input" placeholder="Ej. Factura #F-2010 — Licencia" required>
+        </label>
+        <div class="form-row-2">
+          <label>
+            Fecha límite
+            <input id="new-ob-date" type="date" class="form-input" required>
+          </label>
+          <label>
+            Monto ($ MXN)
+            <input id="new-ob-amount" type="number" min="1" step="0.01" class="form-input mono" placeholder="15000" required>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="btn-primary">Guardar obligación</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
